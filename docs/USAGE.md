@@ -37,12 +37,27 @@ sslcertcheck check --format json example.com > report.json
 The top-level JSON fields are:
 
 - `target`: normalized scheme, host, port, address, SNI and verify name.
-- `tls`: handshake, negotiated TLS and TLS version probe results.
-- `http`: plain HTTP reachability results when applicable.
+- `dns`: A, AAAA, CNAME, PTR and CAA lookup results.
+- `tls`: handshake, negotiated TLS, OCSP staple/SCT data, TLS version probes and TLS 1.0-1.2 cipher inventory.
+- `http`: HTTP/HTTPS reachability, redirects, response headers and security header checks.
 - `verification`: hostname, root trust, chain and validity checks.
-- `certificates`: certificates sent by the server.
+- `certificates`: certificates sent by the server, including issuer/subject fields, SANs, key usage, public key data, fingerprints, OCSP, CRL and CT/SCT hints.
+- `security`: local score, local grade and pass/warn/fail/not-tested findings.
 - `warnings`: operational warnings.
 - `errors`: connection or verification errors.
+
+## Advanced scan controls
+
+The default check performs DNS, TLS version, cipher and HTTP/HTTPS header diagnostics. Disable slower or environment-sensitive checks when needed:
+
+```bash
+sslcertcheck check --skip-dns example.com
+sslcertcheck check --skip-http example.com
+sslcertcheck check --skip-cipher-scan example.com
+sslcertcheck check --skip-tls-probe example.com
+```
+
+The local `security.local_grade` is a transparent local score, not a clone of SSL Labs' proprietary grade. Low-level vulnerability probes that cannot be performed safely with the Go standard TLS stack are included as `not_tested` findings instead of being silently omitted.
 
 ## CI gate
 

@@ -12,7 +12,9 @@
 ![targets](https://img.shields.io/badge/targets-domain%20%7C%20IP%20%7C%20HTTP%20%7C%20HTTPS-0E8A16)
 ![trust](https://img.shields.io/badge/trust-root%20%7C%20intermediate%20%7C%20chain-yellow)
 
-[Quick Start](#quick-start) • [CLI](#cli-usage) • [GUI](#browser-gui) • [Target Syntax](#target-syntax) • [TLS Detection](#tls-version-detection) • [Chain Verification](#certificate-chain-verification) • [Private Sites](#private-sites-and-custom-cas) • [Platforms](#platform-support) • [GitHub/GitLab/Gitea](#github-gitlab-and-gitea) • [Security](#security-model) • [License](#license)
+[Quick Start](#quick-start) • [CLI](#cli-usage) • [GUI](#browser-gui) • [Target Syntax](#target-syntax) • [TLS Detection](#tls-version-detection) • [Chain Verification](#certificate-chain-verification) • [Feature Coverage](docs/FEATURE_COVERAGE.md) • [Private Sites](#private-sites-and-custom-cas) • [Platforms](#platform-support) • [GitHub/GitLab/Gitea](#github-gitlab-and-gitea) • [Security](#security-model) • [License](#license)
+
+English • [Türkçe](README.tr.md)
 
 </div>
 
@@ -29,10 +31,15 @@ The project ships with a native CLI and a browser-based GUI. The GUI is intentio
 - Plain HTTP reachability, with a clear warning that no certificate exists for plain HTTP.
 - TLS handshake details: negotiated TLS version, cipher suite, ALPN and SNI.
 - TLS version support probes for TLS 1.0, 1.1, 1.2 and 1.3.
+- TLS 1.0-1.2 cipher suite inventory with weak, legacy, CBC, AEAD and forward-secrecy classification.
 - Leaf certificate validity, expiry, not-before dates, SANs, IP SANs and fingerprint.
+- Detailed certificate metadata including serial number, issuer/subject organization, validation-policy hints, key usage, EKU, public key hash, SHA-1/SHA-256 fingerprints, OCSP, CRL and CT/SCT signals.
 - Root trust using the OS trust store, optionally extended with a private PEM CA bundle.
 - Intermediate certificate presence and chain buildability.
 - Hostname or IP identity verification, including IP SAN verification for IP targets.
+- DNS A, AAAA, CNAME, PTR and CAA records that affect certificate issuance and installation diagnostics.
+- HTTP/HTTPS response headers including HSTS, CSP, X-Content-Type-Options, frame protection, Referrer-Policy, Permissions-Policy and redirect behavior.
+- Local security findings for common certificate, protocol, cipher, header and installation problems.
 - JSON output for automation, CI/CD, GitHub, GitLab, Gitea and monitoring scripts.
 
 ## Quick start
@@ -80,6 +87,9 @@ Useful flags:
 --skip-tls-probe          Skip TLS 1.0/1.1/1.2/1.3 version probing
 --include-pem             Include PEM bodies in JSON output
 --force-tls               Perform TLS even when the target uses http://
+--skip-dns                Skip DNS A/AAAA/CNAME/CAA/PTR lookups
+--skip-http               Skip HTTP/HTTPS response header checks
+--skip-cipher-scan        Skip TLS 1.0-1.2 cipher suite inventory
 --fail-on-invalid         Exit with code 2 when TLS verification fails
 ```
 
@@ -136,6 +146,8 @@ TLS 1.3  supported / not supported
 
 This helps detect legacy protocol exposure and verify that modern TLS is enabled. Use `--skip-tls-probe` for very slow or rate-limited endpoints.
 
+Unless disabled with `--skip-cipher-scan`, the checker also probes TLS 1.0, 1.1 and 1.2 cipher suites and classifies accepted ciphers as modern, legacy or weak. TLS 1.3 cipher suites are reported through the negotiated/probed TLS connection because Go intentionally does not allow forcing individual TLS 1.3 cipher suites.
+
 ## Certificate chain verification
 
 The verifier separates the major certificate checks so operators can quickly see what failed:
@@ -146,8 +158,14 @@ The verifier separates the major certificate checks so operators can quickly see
 - **Intermediate detection**: did the server omit likely intermediate certificates?
 - **Validity**: is the leaf expired or not yet valid?
 - **Self-signed detection**: is the leaf self-signed?
+- **Revocation and transparency hints**: does the certificate advertise OCSP/CRL endpoints, OCSP Must-Staple or SCTs?
+- **Installation metadata**: issuer, subject, SANs, key usage, EKU, public key size/hash and fingerprints.
 
 The TLS handshake intentionally collects peer certificates even when the certificate is invalid, then performs explicit verification. That means broken, expired, private or incomplete chains can still be inspected instead of failing silently.
+
+## Local security findings
+
+The `security` JSON section and text summary combine the evidence into a local score and grade. This grade is intentionally local and transparent; it is not a claim to reproduce Qualys SSL Labs' proprietary grading or multi-vantage public-internet scanner. Findings cover expired or mismatched certificates, chain/root trust failures, obsolete TLS versions, weak or legacy ciphers, missing HSTS/security headers, missing CAA records, BEAST/ROBOT preconditions that can be inferred locally, and unsupported low-level vulnerability probes such as Heartbleed, Ticketbleed and SSLv3 POODLE as explicit `not_tested` findings.
 
 ## Private sites and custom CAs
 

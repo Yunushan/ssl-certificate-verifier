@@ -44,6 +44,9 @@ type checkRequest struct {
 	NoHostname     bool   `json:"no_hostname"`
 	IncludePEM     bool   `json:"include_pem"`
 	SkipTLSProbe   bool   `json:"skip_tls_probe"`
+	SkipDNS        bool   `json:"skip_dns"`
+	SkipHTTP       bool   `json:"skip_http"`
+	SkipCiphers    bool   `json:"skip_ciphers"`
 	ForceTLS       bool   `json:"force_tls"`
 }
 
@@ -82,6 +85,9 @@ func (s *Server) checkAPI(w http.ResponseWriter, r *http.Request) {
 	opt.NoHostname = req.NoHostname
 	opt.IncludePEM = req.IncludePEM
 	opt.SkipTLSProbe = req.SkipTLSProbe
+	opt.SkipDNS = req.SkipDNS
+	opt.SkipHTTP = req.SkipHTTP
+	opt.SkipCiphers = req.SkipCiphers
 	opt.ForceTLS = req.ForceTLS
 	if req.TimeoutSeconds > 0 {
 		opt.Timeout = time.Duration(req.TimeoutSeconds) * time.Second
@@ -190,6 +196,9 @@ const indexHTML = `<!doctype html>
         <label><input id="force" type="checkbox" /> Force TLS even for http://</label>
         <label><input id="nohost" type="checkbox" /> Skip hostname verification</label>
         <label><input id="skipprobe" type="checkbox" /> Skip TLS version probe</label>
+        <label><input id="skipciphers" type="checkbox" /> Skip cipher scan</label>
+        <label><input id="skipdns" type="checkbox" /> Skip DNS</label>
+        <label><input id="skiphttp" type="checkbox" /> Skip HTTP headers</label>
         <label><input id="pem" type="checkbox" /> Include PEM in JSON</label>
       </div>
       <div class="col-12"><button id="run">Run certificate check</button> <span class="muted" id="hint">The check runs from this host, so private networks are supported when reachable from here.</span></div>
@@ -216,6 +225,9 @@ $('run').addEventListener('click', async () => {
     force_tls: $('force').checked,
     no_hostname: $('nohost').checked,
     skip_tls_probe: $('skipprobe').checked,
+    skip_ciphers: $('skipciphers').checked,
+    skip_dns: $('skipdns').checked,
+    skip_http: $('skiphttp').checked,
     include_pem: $('pem').checked
   };
   $('run').disabled = true;
@@ -241,6 +253,7 @@ function render(r) {
   html += '<h2>Result for ' + esc(r.target.host) + ':' + esc(r.target.port) + '</h2>';
   html += '<div class="cards">';
   html += card('Protocol', r.protocol || '-');
+  html += card('Local grade', r.security ? esc(r.security.local_grade || '-') : '-');
   html += card('TLS connected', r.tls && r.tls.attempted ? (r.tls.connected ? '<span class="ok">yes</span>' : '<span class="bad">no</span>') : '-');
   html += card('Certificate', r.verification && r.verification.checked ? yes(r.verification.verified) : '<span class="warn">not checked</span>');
   html += card('Hostname', r.verification && r.verification.hostname_checked ? yes(r.verification.hostname_verified) : '<span class="warn">skipped</span>');
@@ -255,8 +268,16 @@ function render(r) {
   html += row('Root trusted', r.verification && r.verification.checked ? yn(r.verification.root_trusted) : '-');
   html += row('Chain complete', r.verification && r.verification.checked ? yn(r.verification.chain_complete) : '-');
   html += '</tbody></table>';
+  if (r.dns && r.dns.attempted) {
+    html += '<h3>DNS</h3><table><tbody>' + row('CNAME', r.dns.cname || '-') + row('A', (r.dns.a || []).join(', ') || '-') + row('AAAA', (r.dns.aaaa || []).join(', ') || '-') + row('CAA host', r.dns.caa_host || '-') + row('CAA', (r.dns.caa || []).map(c => c.flag + ' ' + c.tag + ' ' + c.value).join(', ') || '-') + '</tbody></table>';
+  }
   if (r.http && r.http.attempted) {
     html += '<h3>HTTP</h3><table><tbody>' + row('URL', r.http.url) + row('Reachable', r.http.reachable ? 'yes' : 'no') + row('Status', r.http.status || '-') + row('Server', r.http.server || '-') + '</tbody></table>';
+    if ((r.http.security_headers || []).length) {
+      html += '<table><thead><tr><th>Header</th><th>Status</th><th>Value</th></tr></thead><tbody>';
+      r.http.security_headers.forEach(h => html += '<tr><td>' + esc(h.name) + '</td><td>' + esc(h.status) + '</td><td>' + esc(h.value || '-') + '</td></tr>');
+      html += '</tbody></table>';
+    }
   }
   if (versions.length) {
     html += '<h3>TLS version support</h3><table><thead><tr><th>Version</th><th>Supported</th><th>Cipher / Error</th></tr></thead><tbody>';
@@ -266,6 +287,11 @@ function render(r) {
   if (certs.length) {
     html += '<h3>Server-sent certificates</h3><table><thead><tr><th>#</th><th>Role</th><th>Subject</th><th>Issuer</th><th>Valid until</th><th>SHA-256</th></tr></thead><tbody>';
     certs.forEach(c => html += '<tr><td>' + c.index + '</td><td>' + esc(c.role) + '</td><td>' + esc(c.subject_common_name || c.subject) + '</td><td>' + esc(c.issuer_common_name || c.issuer) + '</td><td>' + esc(c.not_after) + '</td><td><code>' + esc(c.fingerprint_sha256) + '</code></td></tr>');
+    html += '</tbody></table>';
+  }
+  if (r.security && (r.security.findings || []).length) {
+    html += '<h3>Local security findings</h3><table><thead><tr><th>Status</th><th>Severity</th><th>Finding</th><th>Detail</th></tr></thead><tbody>';
+    r.security.findings.forEach(f => html += '<tr><td>' + esc(f.status) + '</td><td>' + esc(f.severity) + '</td><td>' + esc(f.title) + '</td><td>' + esc(f.description || '-') + '</td></tr>');
     html += '</tbody></table>';
   }
   if (warnings.length) html += '<h3 class="warn">Warnings</h3><ul>' + warnings.map(w => '<li>' + esc(w) + '</li>').join('') + '</ul>';

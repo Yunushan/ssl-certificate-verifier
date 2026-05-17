@@ -90,6 +90,9 @@ func runCheck(args []string) error {
 	fs.BoolVar(&opt.NoHostname, "no-hostname", false, "skip hostname verification and verify only the chain")
 	fs.BoolVar(&opt.IncludePEM, "include-pem", false, "include PEM certificate bodies in JSON output")
 	fs.BoolVar(&opt.SkipTLSProbe, "skip-tls-probe", false, "skip TLS 1.0-1.3 support detection")
+	fs.BoolVar(&opt.SkipDNS, "skip-dns", false, "skip DNS A/AAAA/CNAME/CAA/PTR lookups")
+	fs.BoolVar(&opt.SkipHTTP, "skip-http", false, "skip HTTP/HTTPS response header checks")
+	fs.BoolVar(&opt.SkipCiphers, "skip-cipher-scan", false, "skip TLS 1.0-1.2 cipher suite inventory")
 	fs.BoolVar(&opt.ForceTLS, "force-tls", false, "perform a TLS handshake even when the target uses http://")
 	failOnInvalid := fs.Bool("fail-on-invalid", false, "exit with code 2 when a TLS certificate is not fully verified")
 	if err := fs.Parse(args); err != nil {
