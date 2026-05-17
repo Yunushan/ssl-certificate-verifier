@@ -65,6 +65,26 @@ The local `security.local_grade` is a transparent local score, not a clone of SS
 sslcertcheck check --fail-on-invalid --format json https://production.example.com > tls-report.json
 ```
 
+## K3s and RKE2 checks
+
+Use the `kube` command to inspect Rancher-managed Kubernetes certificate locations and the live Kubernetes API server TLS endpoint.
+
+```bash
+sslcertcheck kube
+sslcertcheck kube --distro k3s
+sslcertcheck kube --distro rke2 --format json
+sslcertcheck kube --distro custom --kubeconfig /path/to/kubeconfig --cert-dir /path/to/tls
+```
+
+Defaults:
+
+- K3s kubeconfig: `/etc/rancher/k3s/k3s.yaml`
+- K3s cert dirs: `/var/lib/rancher/k3s/server/tls`, `/var/lib/rancher/k3s/agent`
+- RKE2 kubeconfig: `/etc/rancher/rke2/rke2.yaml`
+- RKE2 cert dirs: `/var/lib/rancher/rke2/server/tls`, `/var/lib/rancher/rke2/agent`
+
+The kubeconfig `certificate-authority` or `certificate-authority-data` field is used to verify the API server certificate when available.
+
 Exit codes:
 
 - `0`: command completed successfully.

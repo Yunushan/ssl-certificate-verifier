@@ -11,6 +11,7 @@ type Options struct {
 	TLSMin       string
 	TLSMax       string
 	CAFile       string
+	CABundlePEM  []byte
 	NoHostname   bool
 	IncludePEM   bool
 	SkipTLSProbe bool

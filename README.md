@@ -39,6 +39,7 @@ The project ships with a native CLI and a browser-based GUI. The GUI is intentio
 - Hostname or IP identity verification, including IP SAN verification for IP targets.
 - DNS A, AAAA, CNAME, PTR and CAA records that affect certificate issuance and installation diagnostics.
 - HTTP/HTTPS response headers including HSTS, CSP, X-Content-Type-Options, frame protection, Referrer-Policy, Permissions-Policy and redirect behavior.
+- K3s and RKE2 presets for Kubernetes API server TLS checks and local Rancher certificate directory scans.
 - Local security findings for common certificate, protocol, cipher, header and installation problems.
 - JSON output for automation, CI/CD, GitHub, GitLab, Gitea and monitoring scripts.
 
@@ -62,12 +63,17 @@ go build -o bin/sslcertcheck ./cmd/sslcertcheck
 
 # Start the browser GUI
 ./bin/sslcertcheck gui --open --listen 127.0.0.1:8088
+
+# Check K3s or RKE2 Kubernetes certificates
+./bin/sslcertcheck kube --distro k3s
+./bin/sslcertcheck kube --distro rke2 --format json
 ```
 
 ## CLI usage
 
 ```text
 sslcertcheck check [flags] <target> [target...]
+sslcertcheck kube [flags]
 sslcertcheck gui [flags]
 sslcertcheck version
 ```
@@ -97,6 +103,46 @@ JSON output example:
 
 ```bash
 sslcertcheck check --format json --fail-on-invalid example.com > report.json
+```
+
+## K3s and RKE2 support
+
+The `kube` command checks lightweight Kubernetes distributions that store cluster certificates under Rancher-managed paths. It reads the admin kubeconfig, checks the Kubernetes API server TLS endpoint using the embedded or referenced cluster CA, and scans local certificate directories for expiry and metadata.
+
+```bash
+# Auto-detect K3s or RKE2 default paths
+sslcertcheck kube
+
+# Explicit presets
+sslcertcheck kube --distro k3s
+sslcertcheck kube --distro rke2
+
+# Custom paths
+sslcertcheck kube --distro custom \
+  --kubeconfig /etc/rancher/k3s/k3s.yaml \
+  --cert-dir /var/lib/rancher/k3s/server/tls
+```
+
+Default K3s paths:
+
+- kubeconfig: `/etc/rancher/k3s/k3s.yaml`
+- certificate directories: `/var/lib/rancher/k3s/server/tls`, `/var/lib/rancher/k3s/agent`
+
+Default RKE2 paths:
+
+- kubeconfig: `/etc/rancher/rke2/rke2.yaml`
+- certificate directories: `/var/lib/rancher/rke2/server/tls`, `/var/lib/rancher/rke2/agent`
+
+Useful flags:
+
+```text
+--distro auto|k3s|rke2|custom  Select path preset
+--kubeconfig FILE              Override kubeconfig path
+--cert-dir DIR                 Add a certificate directory; can be repeated
+--skip-live                    Skip live API server TLS check
+--skip-cert-scan               Skip local certificate directory scan
+--format text|json             Output text or JSON
+--fail-on-invalid              Exit with code 2 for invalid API TLS or expired local certs
 ```
 
 ## Browser GUI
@@ -192,6 +238,8 @@ The custom bundle is appended to the OS trust store. It does not replace system 
 ## Build from source
 
 ```bash
+# Requires Go 1.26 or newer
+
 # Test
 go test ./...
 

@@ -39,6 +39,7 @@ Proje yerel bir CLI ve tarayıcı tabanlı GUI içerir. GUI aynı ikili dosya ta
 - Hostname veya IP kimliği doğrulaması; IP hedefleri için IP SAN doğrulaması dahil.
 - Sertifika yayınlama ve kurulum tanılamasını etkileyen DNS A, AAAA, CNAME, PTR ve CAA kayıtları.
 - HSTS, CSP, X-Content-Type-Options, frame protection, Referrer-Policy, Permissions-Policy ve yönlendirme davranışı dahil HTTP/HTTPS response header kontrolleri.
+- Kubernetes API server TLS kontrolü ve yerel Rancher sertifika dizini taraması için K3s ve RKE2 preset'leri.
 - Yaygın sertifika, protokol, cipher, header ve kurulum problemleri için yerel güvenlik bulguları.
 - Otomasyon, CI/CD, GitHub, GitLab, Gitea ve izleme script'leri için JSON çıktı.
 
@@ -62,12 +63,17 @@ go build -o bin/sslcertcheck ./cmd/sslcertcheck
 
 # Tarayıcı GUI'sini başlat
 ./bin/sslcertcheck gui --open --listen 127.0.0.1:8088
+
+# K3s veya RKE2 Kubernetes sertifikalarını kontrol et
+./bin/sslcertcheck kube --distro k3s
+./bin/sslcertcheck kube --distro rke2 --format json
 ```
 
 ## CLI kullanımı
 
 ```text
 sslcertcheck check [flags] <target> [target...]
+sslcertcheck kube [flags]
 sslcertcheck gui [flags]
 sslcertcheck version
 ```
@@ -97,6 +103,46 @@ JSON çıktı örneği:
 
 ```bash
 sslcertcheck check --format json --fail-on-invalid example.com > report.json
+```
+
+## K3s ve RKE2 desteği
+
+`kube` komutu, cluster sertifikalarını Rancher tarafından yönetilen path'lerde tutan hafif Kubernetes dağıtımlarını kontrol eder. Admin kubeconfig dosyasını okur, gömülü veya referans verilen cluster CA ile Kubernetes API server TLS endpoint'ini kontrol eder ve yerel sertifika dizinlerini expiry/meta veri için tarar.
+
+```bash
+# K3s veya RKE2 varsayılan path'lerini otomatik bul
+sslcertcheck kube
+
+# Açık preset seçimi
+sslcertcheck kube --distro k3s
+sslcertcheck kube --distro rke2
+
+# Özel path'ler
+sslcertcheck kube --distro custom \
+  --kubeconfig /etc/rancher/k3s/k3s.yaml \
+  --cert-dir /var/lib/rancher/k3s/server/tls
+```
+
+Varsayılan K3s path'leri:
+
+- kubeconfig: `/etc/rancher/k3s/k3s.yaml`
+- sertifika dizinleri: `/var/lib/rancher/k3s/server/tls`, `/var/lib/rancher/k3s/agent`
+
+Varsayılan RKE2 path'leri:
+
+- kubeconfig: `/etc/rancher/rke2/rke2.yaml`
+- sertifika dizinleri: `/var/lib/rancher/rke2/server/tls`, `/var/lib/rancher/rke2/agent`
+
+Kullanışlı flag'ler:
+
+```text
+--distro auto|k3s|rke2|custom  Path preset seçimi
+--kubeconfig FILE              Kubeconfig path'ini değiştirir
+--cert-dir DIR                 Sertifika dizini ekler; birden fazla kez kullanılabilir
+--skip-live                    Canlı API server TLS kontrolünü atlar
+--skip-cert-scan               Yerel sertifika dizini taramasını atlar
+--format text|json             Text veya JSON çıktı üretir
+--fail-on-invalid              API TLS geçersizse veya yerel cert süresi dolmuşsa çıkış kodu 2 döndürür
 ```
 
 ## Tarayıcı GUI
@@ -192,6 +238,8 @@ sslcertcheck check --ca-file ./company-root-and-intermediates.pem https://intran
 ## Kaynaktan derleme
 
 ```bash
+# Go 1.26 veya daha yenisi gerekir
+
 # Test
 go test ./...
 

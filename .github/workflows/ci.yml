@@ -19,7 +19,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.23.x'
+          go-version: '1.26.x'
           cache: true
           cache-dependency-path: go.mod
       - name: Test
@@ -63,7 +63,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.23.x'
+          go-version: '1.26.x'
           cache: true
           cache-dependency-path: go.mod
       - name: Build

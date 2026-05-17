@@ -10,7 +10,7 @@ import (
 func verifyPeerCertificates(certs []*x509.Certificate, target Target, opt Options, now time.Time) (VerificationInfo, []string) {
 	info := VerificationInfo{
 		Checked:         len(certs) > 0,
-		UsesCustomCA:    opt.CAFile != "",
+		UsesCustomCA:    opt.CAFile != "" || len(opt.CABundlePEM) > 0,
 		VerifyName:      verifyName(target, opt),
 		HostnameChecked: !opt.NoHostname,
 	}
@@ -25,7 +25,7 @@ func verifyPeerCertificates(certs []*x509.Certificate, target Target, opt Option
 	info.NotYetValid = now.Before(leaf.NotBefore)
 	info.SelfSignedLeaf = IsSelfSigned(leaf)
 
-	roots, rootWarnings, rootErr := loadRoots(opt.CAFile)
+	roots, rootWarnings, rootErr := loadRoots(opt.CAFile, opt.CABundlePEM)
 	warnings = append(warnings, rootWarnings...)
 	if rootErr != nil {
 		info.Errors = append(info.Errors, fmt.Sprintf("roots: %v", rootErr))
@@ -86,7 +86,7 @@ func verifyPeerCertificates(certs []*x509.Certificate, target Target, opt Option
 	return info, warnings
 }
 
-func loadRoots(caFile string) (*x509.CertPool, []string, error) {
+func loadRoots(caFile string, caBundlePEM []byte) (*x509.CertPool, []string, error) {
 	var warnings []string
 	roots, err := x509.SystemCertPool()
 	if err != nil {
@@ -96,16 +96,19 @@ func loadRoots(caFile string) (*x509.CertPool, []string, error) {
 	if roots == nil {
 		roots = x509.NewCertPool()
 	}
-	if caFile == "" {
-		return roots, warnings, nil
+	if caFile != "" {
+		data, readErr := os.ReadFile(caFile)
+		if readErr != nil {
+			return roots, warnings, readErr
+		}
+		if ok := roots.AppendCertsFromPEM(data); !ok {
+			return roots, warnings, fmt.Errorf("no PEM certificates found in %s", caFile)
+		}
 	}
-
-	data, readErr := os.ReadFile(caFile)
-	if readErr != nil {
-		return roots, warnings, readErr
-	}
-	if ok := roots.AppendCertsFromPEM(data); !ok {
-		return roots, warnings, fmt.Errorf("no PEM certificates found in %s", caFile)
+	if len(caBundlePEM) > 0 {
+		if ok := roots.AppendCertsFromPEM(caBundlePEM); !ok {
+			return roots, warnings, fmt.Errorf("no PEM certificates found in inline CA bundle")
+		}
 	}
 	return roots, warnings, nil
 }

@@ -17,6 +17,8 @@ This project targets the combined public feature surface of common SSL checker t
 - TLS 1.0-1.2 cipher inventory with weak, legacy, CBC, AEAD and forward-secrecy classification.
 - DNS A, AAAA, CNAME, PTR and CAA records.
 - HTTP/HTTPS response details, redirect behavior and common security headers.
+- K3s and RKE2 presets for `/etc/rancher/...` kubeconfigs and `/var/lib/rancher/...` certificate directories.
+- Kubernetes API server live TLS checks using kubeconfig CA file or inline CA data.
 - Local security score, local grade and pass/warn/fail findings.
 
 ## Reported with explicit limits

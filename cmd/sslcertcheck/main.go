@@ -38,6 +38,8 @@ func main() {
 	switch cmd {
 	case "check":
 		err = runCheck(args)
+	case "kube", "kubernetes", "k8s":
+		err = runKubernetes(args)
 	case "gui":
 		err = runGUI(args)
 	case "version":
@@ -56,7 +58,7 @@ func main() {
 
 func knownCommand(cmd string) bool {
 	switch cmd {
-	case "check", "gui", "version", "help", "--help", "-h":
+	case "check", "kube", "kubernetes", "k8s", "gui", "version", "help", "--help", "-h":
 		return true
 	default:
 		return false
@@ -147,6 +149,92 @@ func runCheck(args []string) error {
 	return nil
 }
 
+type stringListFlag []string
+
+func (f *stringListFlag) String() string {
+	return strings.Join(*f, ",")
+}
+
+func (f *stringListFlag) Set(value string) error {
+	if strings.TrimSpace(value) == "" {
+		return nil
+	}
+	*f = append(*f, value)
+	return nil
+}
+
+func runKubernetes(args []string) error {
+	fs := flag.NewFlagSet("kube", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	var certDirs stringListFlag
+	format := fs.String("format", "text", "output format: text or json")
+	distro := fs.String("distro", "auto", "Kubernetes distro preset: auto, k3s, rke2, or custom")
+	kubeconfig := fs.String("kubeconfig", "", "kubeconfig path; defaults to K3s/RKE2 admin kubeconfig")
+	fs.Var(&certDirs, "cert-dir", "certificate directory to scan; may be repeated")
+	timeout := fs.Duration("timeout", 10*time.Second, "network timeout for the API server check")
+	includePEM := fs.Bool("include-pem", false, "include PEM certificate bodies in JSON output")
+	skipLive := fs.Bool("skip-live", false, "skip live Kubernetes API server TLS check")
+	skipCertScan := fs.Bool("skip-cert-scan", false, "skip local K3s/RKE2 certificate directory scan")
+	failOnInvalid := fs.Bool("fail-on-invalid", false, "exit with code 2 when API TLS or local certificates are invalid")
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+
+	report, err := checker.CheckKubernetes(context.Background(), checker.KubernetesOptions{
+		Distro:       *distro,
+		Kubeconfig:   *kubeconfig,
+		CertDirs:     certDirs,
+		Timeout:      *timeout,
+		IncludePEM:   *includePEM,
+		SkipLive:     *skipLive,
+		SkipCertScan: *skipCertScan,
+	})
+	if err != nil {
+		return err
+	}
+
+	switch strings.ToLower(*format) {
+	case "json":
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		if err := enc.Encode(report); err != nil {
+			return err
+		}
+	case "text", "":
+		fmt.Print(checker.RenderKubernetesText(report))
+	default:
+		return fmt.Errorf("unsupported format %q", *format)
+	}
+
+	if *failOnInvalid && kubernetesInvalid(report) {
+		return invalidExit{}
+	}
+	return nil
+}
+
+func kubernetesInvalid(report *checker.KubernetesReport) bool {
+	if report == nil {
+		return true
+	}
+	if len(report.Errors) > 0 {
+		return true
+	}
+	if report.APIServerCheck != nil && report.APIServerCheck.TLS.Attempted {
+		if !report.APIServerCheck.TLS.Connected || !report.APIServerCheck.Verification.Verified {
+			return true
+		}
+	}
+	for _, cert := range report.Certificates {
+		if cert.Certificate.Status != "valid" {
+			return true
+		}
+	}
+	return false
+}
+
 func runGUI(args []string) error {
 	fs := flag.NewFlagSet("gui", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
@@ -192,6 +280,7 @@ func usage() {
 
 Usage:
   sslcertcheck check [flags] <target> [target...]
+  sslcertcheck kube [flags]
   sslcertcheck gui [flags]
   sslcertcheck version
 
@@ -208,8 +297,10 @@ Examples:
   sslcertcheck check --format json --servername app.internal 10.0.0.5:443
   sslcertcheck check --ca-file ./private-root-ca.pem https://portal.internal:8443
   sslcertcheck check --tls-min 1.2 --fail-on-invalid example.com
+  sslcertcheck kube --distro k3s
+  sslcertcheck kube --distro rke2 --format json
   sslcertcheck gui --open --listen 127.0.0.1:8088
 
-Use "sslcertcheck check -h" or "sslcertcheck gui -h" for command flags.
+Use "sslcertcheck check -h", "sslcertcheck kube -h" or "sslcertcheck gui -h" for command flags.
 `, version)
 }
