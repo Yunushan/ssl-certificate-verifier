@@ -1,0 +1,32 @@
+stages:
+  - test
+  - build
+
+variables:
+  GOFLAGS: "-trimpath"
+
+test:
+  stage: test
+  image: golang:1.23
+  script:
+    - go test ./...
+
+build:linux-amd64:
+  stage: build
+  image: golang:1.23
+  script:
+    - mkdir -p dist
+    - GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags='-s -w' -o dist/sslcertcheck-linux-amd64 ./cmd/sslcertcheck
+  artifacts:
+    paths:
+      - dist/sslcertcheck-linux-amd64
+
+build:windows-amd64:
+  stage: build
+  image: golang:1.23
+  script:
+    - mkdir -p dist
+    - GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags='-s -w' -o dist/sslcertcheck-windows-amd64.exe ./cmd/sslcertcheck
+  artifacts:
+    paths:
+      - dist/sslcertcheck-windows-amd64.exe

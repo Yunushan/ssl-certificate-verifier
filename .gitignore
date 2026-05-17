@@ -1,0 +1,8 @@
+/bin/
+/dist/
+/coverage.out
+*.log
+*.tmp
+.DS_Store
+.idea/
+.vscode/

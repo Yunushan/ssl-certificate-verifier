@@ -1,0 +1,8 @@
+{
+  "timeout_seconds": 10,
+  "skip_tls_probe": false,
+  "include_pem": false,
+  "no_hostname": false,
+  "force_tls": false,
+  "notes": "This file is documentation-only in v0.1.0. Pass options with CLI flags or GUI fields."
+}
