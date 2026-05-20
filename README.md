@@ -12,7 +12,7 @@
 ![targets](https://img.shields.io/badge/targets-domain%20%7C%20IP%20%7C%20HTTP%20%7C%20HTTPS-0E8A16)
 ![trust](https://img.shields.io/badge/trust-root%20%7C%20intermediate%20%7C%20chain-yellow)
 
-[Quick Start](#quick-start) • [CLI](#cli-usage) • [GUI](#browser-gui) • [Target Syntax](#target-syntax) • [TLS Detection](#tls-version-detection) • [Chain Verification](#certificate-chain-verification) • [Feature Coverage](docs/FEATURE_COVERAGE.md) • [Private Sites](#private-sites-and-custom-cas) • [Platforms](#platform-support) • [GitHub/GitLab/Gitea](#github-gitlab-and-gitea) • [Security](#security-model) • [License](#license)
+[Quick Start](#quick-start) • [CLI](#cli-usage) • [GUI](#browser-gui) • [Target Syntax](#target-syntax) • [TLS Detection](#tls-version-detection) • [Chain Verification](#certificate-chain-verification) • [Feature Coverage](docs/FEATURE_COVERAGE.md) • [Checker Parity](docs/CHECKER_PARITY.md) • [Private Sites](#private-sites-and-custom-cas) • [Platforms](#platform-support) • [GitHub/GitLab/Gitea](#github-gitlab-and-gitea) • [Security](#security-model) • [License](#license)
 
 English • [Türkçe](README.tr.md)
 
@@ -42,6 +42,8 @@ The project ships with a native CLI and a browser-based GUI. The GUI is intentio
 - K3s and RKE2 presets for Kubernetes API server TLS checks and local Rancher certificate directory scans.
 - Local security findings for common certificate, protocol, cipher, header and installation problems.
 - JSON output for automation, CI/CD, GitHub, GitLab, Gitea and monitoring scripts.
+
+The long-term parity goal is to cover the public feature surface of common SSL checker tools. See [`docs/CHECKER_PARITY.md`](docs/CHECKER_PARITY.md) for the coverage matrix and roadmap.
 
 ## Quick start
 

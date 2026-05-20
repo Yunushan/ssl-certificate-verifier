@@ -2,6 +2,8 @@
 
 This project targets the combined public feature surface of common SSL checker tools while keeping the scanner local, transparent and dependency-light.
 
+The long-term 100% public-feature parity plan is tracked in [`CHECKER_PARITY.md`](CHECKER_PARITY.md).
+
 ## Covered locally
 
 - Host, URL, IP and custom port input.

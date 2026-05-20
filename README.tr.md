@@ -12,7 +12,7 @@
 ![targets](https://img.shields.io/badge/targets-domain%20%7C%20IP%20%7C%20HTTP%20%7C%20HTTPS-0E8A16)
 ![trust](https://img.shields.io/badge/trust-root%20%7C%20intermediate%20%7C%20chain-yellow)
 
-[Hızlı Başlangıç](#hızlı-başlangıç) • [CLI](#cli-kullanımı) • [GUI](#tarayıcı-gui) • [Hedef Yazımı](#hedef-yazımı) • [TLS Tespiti](#tls-sürüm-tespiti) • [Zincir Doğrulama](#sertifika-zinciri-doğrulaması) • [Özellik Kapsamı](docs/FEATURE_COVERAGE.md) • [Özel Ağlar](#özel-siteler-ve-özel-ca) • [Platformlar](#platform-desteği) • [GitHub/GitLab/Gitea](#github-gitlab-ve-gitea) • [Güvenlik](#güvenlik-modeli) • [Lisans](#lisans)
+[Hızlı Başlangıç](#hızlı-başlangıç) • [CLI](#cli-kullanımı) • [GUI](#tarayıcı-gui) • [Hedef Yazımı](#hedef-yazımı) • [TLS Tespiti](#tls-sürüm-tespiti) • [Zincir Doğrulama](#sertifika-zinciri-doğrulaması) • [Özellik Kapsamı](docs/FEATURE_COVERAGE.md) • [Checker Parity](docs/CHECKER_PARITY.md) • [Özel Ağlar](#özel-siteler-ve-özel-ca) • [Platformlar](#platform-desteği) • [GitHub/GitLab/Gitea](#github-gitlab-ve-gitea) • [Güvenlik](#güvenlik-modeli) • [Lisans](#lisans)
 
 [English](README.md) • Türkçe
 
@@ -42,6 +42,8 @@ Proje yerel bir CLI ve tarayıcı tabanlı GUI içerir. GUI aynı ikili dosya ta
 - Kubernetes API server TLS kontrolü ve yerel Rancher sertifika dizini taraması için K3s ve RKE2 preset'leri.
 - Yaygın sertifika, protokol, cipher, header ve kurulum problemleri için yerel güvenlik bulguları.
 - Otomasyon, CI/CD, GitHub, GitLab, Gitea ve izleme script'leri için JSON çıktı.
+
+Uzun vadeli parity hedefi, yaygın SSL checker araçlarının herkese açık özellik yüzeyini kapsamaktır. Kapsam matrisi ve yol haritası için [`docs/CHECKER_PARITY.md`](docs/CHECKER_PARITY.md) dosyasına bakın.
 
 ## Hızlı başlangıç
 
