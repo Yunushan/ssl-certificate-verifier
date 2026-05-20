@@ -6,6 +6,16 @@ The project is built with Go and uses only the Go standard library. The same com
 
 The GUI is browser-based and served by the binary, which avoids native GUI toolkit differences across platforms.
 
+## Windows Go bootstrap
+
+On Windows, `scripts/build.ps1` checks for the Go version declared in `go.mod` before running tests or builds. If Go is missing, the script prints install options and exits without downloading anything.
+
+Use the explicit install flag to allow `winget` to install or update Go:
+
+```powershell
+.\scripts\build.ps1 -InstallGo
+```
+
 ## Android
 
 Android support is available in two practical modes:

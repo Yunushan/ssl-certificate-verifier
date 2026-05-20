@@ -254,6 +254,18 @@ GOOS=freebsd GOARCH=amd64 go build -o dist/sslcertcheck-freebsd-amd64     ./cmd/
 GOOS=android GOARCH=arm64 go build -o dist/sslcertcheck-android-arm64     ./cmd/sslcertcheck
 ```
 
+Windows'ta release build yardımcısı test veya build çalıştırmadan önce gerekli Go sürümünü kontrol eder:
+
+```powershell
+.\scripts\build.ps1
+```
+
+Go eksikse kurulum seçeneklerini yazdırır ve durur. Yardımcının `winget` ile Go kurmasına veya güncellemesine açıkça izin vermek için:
+
+```powershell
+.\scripts\build.ps1 -InstallGo
+```
+
 Tekrarlanabilir çoklu platform release build'leri için [`scripts/build.sh`](scripts/build.sh) ve [`scripts/build.ps1`](scripts/build.ps1) dosyalarına bakın.
 
 ## Docker

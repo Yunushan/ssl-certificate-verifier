@@ -12,6 +12,12 @@ On Windows PowerShell:
 ./scripts/build.ps1
 ```
 
+The Windows helper verifies that the required Go version is available before it runs tests or builds. If Go is missing, it prints install options and exits. To explicitly allow Go installation or update through `winget`, run:
+
+```powershell
+./scripts/build.ps1 -InstallGo
+```
+
 ## Suggested release assets
 
 - `sslcertcheck-windows-amd64.exe`

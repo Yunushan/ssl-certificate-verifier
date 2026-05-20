@@ -254,6 +254,18 @@ GOOS=freebsd GOARCH=amd64 go build -o dist/sslcertcheck-freebsd-amd64     ./cmd/
 GOOS=android GOARCH=arm64 go build -o dist/sslcertcheck-android-arm64     ./cmd/sslcertcheck
 ```
 
+On Windows, the release build helper checks for the required Go version before it runs tests or builds:
+
+```powershell
+.\scripts\build.ps1
+```
+
+If Go is missing, it prints install options and stops. To explicitly allow the helper to install or update Go with `winget`, run:
+
+```powershell
+.\scripts\build.ps1 -InstallGo
+```
+
 For reproducible multi-platform release builds, see [`scripts/build.sh`](scripts/build.sh) and [`scripts/build.ps1`](scripts/build.ps1).
 
 ## Docker
