@@ -29,6 +29,26 @@ func TestCheckHTTPSLocalServer(t *testing.T) {
 	}
 }
 
+func TestCheckHTTPSHTTP2Server(t *testing.T) {
+	srv := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte("ok"))
+	}))
+	srv.EnableHTTP2 = true
+	srv.StartTLS()
+	defer srv.Close()
+
+	result, err := Check(context.Background(), srv.URL, Options{Timeout: 3 * time.Second, SkipDNS: true, SkipTLSProbe: true, SkipCiphers: true})
+	if err != nil {
+		t.Fatalf("Check returned error: %v", err)
+	}
+	if result.TLS.ALPN != "h2" {
+		t.Fatalf("expected h2 ALPN, got %q", result.TLS.ALPN)
+	}
+	if !result.HTTP.Attempted || !result.HTTP.Reachable {
+		t.Fatalf("expected HTTP/2 probe to be reachable, got HTTP=%+v errors=%v", result.HTTP, result.Errors)
+	}
+}
+
 func TestCheckHTTPPlainServer(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Server", "test")

@@ -119,7 +119,9 @@ func checkHTTP(ctx context.Context, target Target, opt Options, result *Result) 
 	url := target.Scheme + "://" + target.Address + target.Path
 	result.HTTP.URL = url
 
-	transport := &http.Transport{}
+	transport := &http.Transport{
+		ForceAttemptHTTP2: true,
+	}
 	if target.Scheme == "https" {
 		transport.TLSClientConfig = &tls.Config{
 			ServerName:         sniName(target, opt),
