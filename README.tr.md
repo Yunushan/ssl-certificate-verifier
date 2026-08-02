@@ -6,7 +6,7 @@
 
 ![build](https://img.shields.io/badge/build-ready-brightgreen)
 ![release](https://img.shields.io/badge/release-v0.1.0-blue)
-![license](https://img.shields.io/badge/license-MIT-blue)
+![license](https://img.shields.io/badge/license-0BSD-blue)
 ![runtime](https://img.shields.io/badge/runtime-Go-orange)
 ![interfaces](https://img.shields.io/badge/interfaces-CLI%20%7C%20GUI-8A2BE2)
 ![targets](https://img.shields.io/badge/targets-domain%20%7C%20IP%20%7C%20HTTP%20%7C%20HTTPS-0E8A16)
@@ -318,4 +318,4 @@ scripts/                 Platformlar arası build yardımcıları
 
 ## Lisans
 
-MIT. Ayrıntılar için [`LICENSE`](LICENSE) dosyasına bakın.
+0BSD. Ayrıntılar için [`LICENSE`](LICENSE) dosyasına bakın.
